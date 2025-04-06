@@ -17,7 +17,7 @@ bindsym $mod+Return exec /usr/bin/ghostty -e zsh --login
 bindsym $mod+Shift+q kill
 
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
-bindsym $mod+d exec rofi -show run
+bindsym $mod+d exec rofi -show drun
 
 bindsym $mod+h focus left
 bindsym $mod+j focus down
