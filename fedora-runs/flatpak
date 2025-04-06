@@ -7,3 +7,5 @@ sudo flatpak install flathub com.slack.Slack
 sudo flatpak install flathub io.dbeaver.DBeaverCommunity
 sudo flatpak install flathub com.brave.Browser
 
+xdg-settings set default-web-browser com.brave.Browser.desktop
+
