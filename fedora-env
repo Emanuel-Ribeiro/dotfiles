@@ -52,8 +52,8 @@ copy_file() {
 	to=$2
 	filename=$(basename $from) #basename takes the last item in the path (eg: /foo/bar/baz the basename will br baz)
 
-	execute rm $to/$name #we dont do recursively forced delete if its not a folder right? Because somehow had a file over here but a folder over there you wont destroy everything by accident
-	execute cp -r $from $to/$name
+	execute rm $to/$filename #we dont do recursively forced delete if its not a folder right? Because somehow had a file over here but a folder over there you wont destroy everything by accident
+	execute cp -r $from $to/$filename
 }
 
 copy_dir .config $XDG_CONFIG_HOME

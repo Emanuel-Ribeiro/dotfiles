@@ -185,3 +185,4 @@ alias vi='cd ~/flat/infrastructure-as-code && nvim .'
 alias sb='cd ~/second-brain && nvim .'
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+eval "$(starship init zsh)"

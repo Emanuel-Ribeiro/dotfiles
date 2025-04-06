@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-sudo apt install zsh
+sudo dnf install zsh
 hash -r
 sudo chsh -s $(which zsh)
-#TODO SETUP STARSHIP
+curl -sS https://starship.rs/install.sh | sh
+
