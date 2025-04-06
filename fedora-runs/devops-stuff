@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+sudo dnf update -y
+
+sudo dnf install -y unzip curl gnupg tar jq
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+sudo ./aws/install
+rm -rf aws awscliv2.zip
+
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"
+sudo dnf install -y ./session-manager-plugin.rpm
+rm session-manager-plugin.rpm
+
+TERRAFORM_VERSION=$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r .current_version)
+curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+sudo mv terraform /usr/local/bin/
+rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+
+TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | jq -r .tag_name | sed 's/v//')
+curl -Lo terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
+chmod +x terragrunt
+sudo mv terragrunt /usr/local/bin/
+
+echo "Tudo instalado com sucesso!"
+echo "Versões instaladas:"
+aws --version
+session-manager-plugin --version
+terraform version
+terragrunt -v
