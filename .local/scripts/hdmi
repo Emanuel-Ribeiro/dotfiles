@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
 
-# Set HDMI-0 (bottom monitor)
-xrandr --output HDMI-0 --mode 1920x1080 --rate 144.00
-
-# Set DP-0 (top monitor) and position it above HDMI-0
-xrandr --output DP-0 --mode 1920x1080 --rate 143.85 --above HDMI-0 --primary
+xrandr --output DP-0 --mode 1920x1080 --rate 143.85
+xrandr --output HDMI-0 --mode 1920x1080 --right-of DP-0 --auto
