@@ -1,6 +1,6 @@
 set $mod Mod1
 
-font pango:monospace 15px
+font pango:monospace 12px
 
 for_window [class="^.*"] border pixel 2
 for_window [class="^.*"] floating disable
