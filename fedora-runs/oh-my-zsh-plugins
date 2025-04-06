@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Diretório base de plugins
+PLUGIN_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
+
+# Lista de plugins e seus repositórios
+declare -A plugins=(
+  [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
+  [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
+  [zsh-z]="https://github.com/agkozak/zsh-z"
+  [zsh-completions]="https://github.com/zsh-users/zsh-completions"
+)
+
+# Criar diretório de plugins se não existir
+mkdir -p "$PLUGIN_DIR"
+
+# Clonar cada plugin se não existir
+for plugin in "${!plugins[@]}"; do
+  if [ -d "$PLUGIN_DIR/$plugin" ]; then
+    echo "[INFO] Plugin '$plugin' já está instalado."
+  else
+    echo "[INFO] Instalando plugin '$plugin'..."
+    git clone --depth=1 "${plugins[$plugin]}" "$PLUGIN_DIR/$plugin"
+  fi
+done
+
+echo "[OK] Todos os plugins foram verificados/instalados."

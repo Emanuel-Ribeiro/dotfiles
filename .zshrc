@@ -117,7 +117,7 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-source ~/.zsh_profile
+# source ~/.zsh_profile
 
 alias luamake=/home/mpaulson/personal/lua-language-server/3rd/luamake/luamake
 
@@ -156,9 +156,6 @@ unset __conda_setup
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Flatpak path for rofi
-export XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/flatpak/exports/share"
-
 # Additional custom aliases and configurations
 alias vim='nvim'
 alias claer='clear'
@@ -170,7 +167,7 @@ alias v='nvim'
 alias gp='git push -u origin $(git branch --show-current)'
 alias gh-create='gh repo create --private --source=. --remote=origin && git push -u --all && gh browse'
 alias cat='bat'
-alias ls='exa'
+alias ls='eza'
 alias tg='terragrunt'
 alias tf='terraform'
 alias 2.='cd ../../'
@@ -184,5 +181,5 @@ alias vn='cd ~/.config/nvim && nvim .'
 alias vi='cd ~/flat/infrastructure-as-code && nvim .'
 alias sb='cd ~/second-brain && nvim .'
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 eval "$(starship init zsh)"

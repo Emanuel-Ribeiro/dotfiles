@@ -12,7 +12,7 @@ for_window [class="^.*"] client.focused #77dd77 #285577 #ffffff #2e9ef4   #28557
 
 floating_modifier $mod
 
-bindsym $mod+Return exec /usr/bin/ghostty
+bindsym $mod+Return exec /usr/bin/ghostty -e zsh --login
 
 bindsym $mod+Shift+q kill
 
