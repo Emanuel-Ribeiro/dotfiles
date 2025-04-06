@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+sudo dnf -y update
+
+sudo dnf install -y \
+  https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+  https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+sudo dnf -y update
+
+sudo dnf -y install akmod-nvidia xorg-x11-drv-nvidia-cuda
+
+sudo dnf -y install kernel-devel
+
+sudo dnf -y install \
+  git \
+  ripgrep \
+  pavucontrol \
+  xclip \
+  jq \
+  tldr \
+  python3-pip \
+  shutter
+
+git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf"
+"$HOME/personal/fzf/install" --all
+
+echo "✅ Instalação concluída. Reinicie o sistema para aplicar o driver NVIDIA."
+
