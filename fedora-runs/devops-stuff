@@ -4,6 +4,11 @@ sudo dnf update -y
 
 sudo dnf install -y unzip curl gnupg tar jq just
 
+# SOPS
+curl -LO https://github.com/getsops/sops/releases/download/v3.10.1/sops-v3.10.1.linux.amd64
+sudo mv sops-v3.10.1.linux.amd64 /usr/local/bin/sops
+sudo chmod +x /usr/local/bin/sops
+
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip -q awscliv2.zip
 sudo ./aws/install
