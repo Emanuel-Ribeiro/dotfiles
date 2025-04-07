@@ -2,7 +2,7 @@
 
 sudo dnf update -y
 
-sudo dnf install -y unzip curl gnupg tar jq
+sudo dnf install -y unzip curl gnupg tar jq just
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip -q awscliv2.zip
