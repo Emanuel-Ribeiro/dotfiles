@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+sudo dnf copr enable derisis13/ani-cli
+sudo dnf install ani-cli
+
