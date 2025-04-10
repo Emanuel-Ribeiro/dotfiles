@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-sudo dnf install i3
+sudo dnf4 groupinstall "i3 desktop" --allowerasing
 
