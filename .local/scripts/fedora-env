@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 (
-cd $HOME/dev
+cd $HOME/dotfiles
 ./fedora-env
 hash -r
 )
+
