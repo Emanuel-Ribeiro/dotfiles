@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+sudo dnf install podman-compose
+
