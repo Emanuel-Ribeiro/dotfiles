@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Atualiza o Homebrew
+brew update
+
+# Instala os aplicativos via Homebrew Cask
+brew install --cask discord
+brew install --cask slack
+brew install --cask dbeaver-community
+brew install --cask brave-browser
+brew install --cask arc
+
+# Instala o utilitário 'defaultbrowser' caso não esteja presente
+if ! command -v defaultbrowser &> /dev/null; then
+  echo "Instalando o utilitário 'defaultbrowser' para definir o navegador padrão..."
+  brew install defaultbrowser
+fi
+
+# Pergunta ao usuário qual navegador deve ser o padrão
+echo ""
+echo "Escolha o navegador padrão:"
+echo "1) Brave"
+echo "2) Arc"
+read -rp "Digite o número da sua escolha [1-2]: " browser_choice
+
+case "$browser_choice" in
+  1)
+    defaultbrowser brave
+    echo "Brave definido como navegador padrão."
+    ;;
+  2)
+    defaultbrowser arc
+    echo "Arc definido como navegador padrão."
+    ;;
+  *)
+    echo "Escolha inválida. Nenhum navegador foi definido como padrão."
+    ;;
+esac
+

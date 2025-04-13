@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# Atualiza o Homebrew e os pacotes
+brew update
+brew upgrade
+
+# Instala pacotes equivalentes disponíveis no macOS via Homebrew
+brew install \
+  git \
+  ripgrep \
+  jq \
+  tldr \
+  python3 \
+  xclip
+
+# Clona e instala o fzf
+git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf"
+"$HOME/personal/fzf/install" --all
+
+echo "✅ Instalação concluída. Você está pronto para usar o sistema!"
+

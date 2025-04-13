@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+git config --global user.email "lima.ribeiro.emanuel@gmail.com"
+git config --global user.name "Emanuel Ribeiro"
+
+brew install go
+cargo install stylua
+luarocks install luacheck
+

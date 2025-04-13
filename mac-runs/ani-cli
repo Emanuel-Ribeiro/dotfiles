@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+brew install curl grep aria2 ffmpeg git fzf yt-dlp && \
+brew install --cask iina
+
