@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+brew install podman-compose
+podman machine init
+podman machine start
+

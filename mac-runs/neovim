@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Diretório onde os projetos serão clonados
+mkdir -p $HOME/personal
+
+# Clonar o Neovim
+git clone -b v0.11.0 https://github.com/neovim/neovim.git $HOME/personal/neovim
+
+# Instalar dependências via Homebrew
+brew install gcc cmake ripgrep gettext lua@5.1 zsh wget
+
+# Exportar LUA_PATH para compilar corretamente com lua@5.1
+export PATH="/opt/homebrew/opt/lua@5.1/bin:$PATH"
+export LDFLAGS="-L/opt/homebrew/opt/lua@5.1/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/lua@5.1/include"
+
+# Compilar e instalar Neovim
+cd $HOME/personal/neovim
+make CMAKE_BUILD_TYPE=RelWithDebInfo
+sudo make install
+
+# Clonar os repositórios do Primeagen
+git clone https://github.com/ThePrimeagen/harpoon.git $HOME/personal/harpoon
+cd $HOME/personal/harpoon
+git fetch
+git checkout harpoon2
+
+git clone https://github.com/ThePrimeagen/vim-apm.git $HOME/personal/vim-apm
+git clone https://github.com/ThePrimeagen/vim-with-me.git $HOME/personal/vim-with-me
+git clone https://github.com/ThePrimeagen/vim-arcade.git $HOME/personal/vim-arcade
+git clone https://github.com/ThePrimeagen/caleb.git $HOME/personal/caleb
+git clone https://github.com/nvim-lua/plenary.nvim.git $HOME/personal/plenary
+
+# Instalar e configurar o Luarocks
+cd $HOME/personal
+wget https://luarocks.org/releases/luarocks-3.11.1.tar.gz
+tar zxpf luarocks-3.11.1.tar.gz
+cd luarocks-3.11.1
+./configure --with-lua-include=/opt/homebrew/opt/lua@5.1/include
+make && sudo make install
+
+# Instalar o luacheck via luarocks
+sudo luarocks install luacheck
+

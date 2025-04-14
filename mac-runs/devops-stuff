@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+sudo dnf update -y
+
+sudo dnf install -y unzip curl gnupg tar jq just
+
+brew install sops
+
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+sudo installer -pkg AWSCLIV2.pkg -target /
+
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/mac_arm64/sessionmanager-bundle.zip" -o "sessionmanager-bundle.zip"
+unzip sessionmanager-bundle.zip
+sudo ./sessionmanager-bundle/install -i /usr/local/sessionmanagerplugin -b /usr/local/bin/session-manager-plugin
+
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+
+brew install terragrunt
+
+echo "Tudo instalado com sucesso!"
+echo "Versões instaladas:"
+aws --version
+session-manager-plugin --version
+terraform version
+terragrunt -v
