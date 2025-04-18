@@ -3,3 +3,10 @@
 sudo dnf copr enable derisis13/ani-cli
 sudo dnf install ani-cli
 
+sudo dnf install zsh
+hash -r
+sudo chsh -s $(which zsh)
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+
+

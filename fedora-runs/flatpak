@@ -9,3 +9,8 @@ sudo flatpak install flathub com.brave.Browser
 
 xdg-settings set default-web-browser com.brave.Browser.desktop
 
+sudo ln -s /var/lib/flatpak/exports/bin/com.brave.Browser /usr/bin/brave
+sudo ln -s /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity /usr/bin/dbeaver
+sudo ln -s /var/lib/flatpak/exports/bin/com.slack.Slack /usr/bin/slack
+sudo ln -s /var/lib/flatpak/exports/bin/com.discordapp.Discord /usr/bin/discord
+
