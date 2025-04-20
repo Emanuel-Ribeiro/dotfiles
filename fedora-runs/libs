@@ -8,7 +8,7 @@ sudo dnf install -y \
 
 sudo dnf -y update
 
-sudo dnf -y install akmod-nvidia xorg-x11-drv-nvidia-cuda
+# sudo dnf -y install akmod-nvidia xorg-x11-drv-nvidia-cuda
 
 sudo dnf -y install kernel-devel
 
