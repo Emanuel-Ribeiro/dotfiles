@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# (Optional) NVIDIA driver check — Pop!_OS typically already has this set up
+# You can uncomment the line below if you want to ensure latest NVIDIA drivers
+# sudo apt install -y nvidia-driver-535  # Replace with the desired version
+
+# Install kernel headers (helpful for DKMS modules)
+sudo apt install -y linux-headers-$(uname -r)
+
+# Install utilities
+sudo apt install -y \
+  ripgrep \
+  pavucontrol \
+  xclip \
+  light \
+  jq \
+  tldr \
+  python3-pip \
+  shutter \
+  build-essential \
+  dkms
+
+# Clone and install fzf
+git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf"
+"$HOME/personal/fzf/install" --all
+

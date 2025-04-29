@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install dependencies
+sudo apt install -y unzip curl gnupg tar jq
+
+# Install `just` command runner
+if ! command -v just &> /dev/null; then
+    curl -s https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+fi
+
+# Install SOPS
+curl -LO https://github.com/getsops/sops/releases/download/v3.10.1/sops-v3.10.1.linux.amd64
+sudo mv sops-v3.10.1.linux.amd64 /usr/local/bin/sops
+sudo chmod +x /usr/local/bin/sops
+
+# Install AWS CLI v2
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+sudo ./aws/install
+rm -rf aws awscliv2.zip
+
+# Install Session Manager Plugin (DEB version)
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
+sudo apt install -y ./session-manager-plugin.deb
+rm session-manager-plugin.deb
+
+# Install Terraform (latest)
+TERRAFORM_VERSION=$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r .current_version)
+curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+sudo mv terraform /usr/local/bin/
+rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+
+# Install Terragrunt (latest)
+TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | jq -r .tag_name | sed 's/v//')
+curl -Lo terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
+chmod +x terragrunt
+sudo mv terragrunt /usr/local/bin/
+
+echo "✅ Tudo instalado com sucesso!"
+echo
+echo "📦 Versões instaladas:"
+aws --version
+session-manager-plugin --version
+terraform version
+terragrunt -v
+

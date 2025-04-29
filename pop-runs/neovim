@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Clone Neovim v0.11.0 source
+git clone -b v0.11.0 https://github.com/neovim/neovim.git "$HOME/personal/neovim"
+
+# Install build dependencies and utilities
+sudo apt update
+sudo apt install -y \
+  ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen \
+  ripgrep lua5.1 liblua5.1-0-dev \
+  maim nitrogen picom xclip
+
+# Build and install Neovim
+cd "$HOME/personal/neovim"
+make CMAKE_BUILD_TYPE=RelWithDebInfo
+sudo make install
+
+# Clone ThePrimeagen's projects
+git clone https://github.com/ThePrimeagen/harpoon.git "$HOME/personal/harpoon"
+cd "$HOME/personal/harpoon"
+git fetch
+git checkout harpoon2
+
+git clone https://github.com/ThePrimeagen/vim-apm.git "$HOME/personal/vim-apm"
+git clone https://github.com/ThePrimeagen/vim-with-me.git "$HOME/personal/vim-with-me"
+git clone https://github.com/ThePrimeagen/vim-arcade.git "$HOME/personal/vim-arcade"
+git clone https://github.com/ThePrimeagen/caleb.git "$HOME/personal/caleb"
+git clone https://github.com/nvim-lua/plenary.nvim.git "$HOME/personal/plenary"
+
+# Install LuaRocks from source
+cd "$HOME"
+wget https://luarocks.org/releases/luarocks-3.11.1.tar.gz
+tar zxpf luarocks-3.11.1.tar.gz
+cd luarocks-3.11.1
+./configure && make && sudo make install
+
+# Install luacheck via luarocks
+sudo luarocks install luacheck
+

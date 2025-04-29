@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+#we use this to get to the script dir, so were going to change directory into bash0(in this case this script) and get the present working dir
+script_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd) 
+filter="" #first argument thats passed into the script
+plan="0"
+
+while [[ $# > 0 ]]; do
+	if [[ $1 == "plan" ]]; then	
+		plan="1"
+	else
+		filter="$1"
+	fi
+	shift #this removes the first arg so whe can proceed whith the rest of them
+done
+
+log(){
+	if [[ $plan = "1" ]]; then
+		echo "[DRY_RUN]: $@" #this means to print everything that was passed to me 
+	else
+		echo "$@" #print all of them
+	fi
+}
+
+execute(){
+	log "execute $@"
+	if [[ $plan = "1" ]]; then
+		return #if it is a plan dont execute at all
+	fi
+
+	"$@" #else execute everything
+}
+
+log "$script_dir -- $filter"
+
+cd $script_dir
+
+#this will find every single executable file thats executable within the runs directory
+scripts=$(find ./pop-runs -maxdepth 1 -mindepth 1 -executable -type f)
+
+#so in this block we are choosing which scripts we want to run, if we do not provide any argument we will run it all, but providing and argument we can run only the filtered one
+for script in $scripts; do
+	#grep -q is to run quietly and -v is to reverse in the sense that is gonna try to not find the match
+	if echo "$script" | grep -qv "$filter"; then #so basically here we are asking, "does this script not contain this filter?"
+		log "Skipping $script script - filtered out"
+		continue	
+	fi	
+
+	execute ./$script #if we have it we execute the script(s)
+done
+

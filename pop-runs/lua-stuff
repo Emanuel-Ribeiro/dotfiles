@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Install Lua 5.1 and development headers
+sudo apt update
+sudo apt install -y lua5.1 liblua5.1-0-dev
+
+# Install LuaRocks for Lua 5.1
+sudo apt install -y luarocks
+
+# Make sure luarocks is using Lua 5.1
+luarocks config --lua-version=5.1
+

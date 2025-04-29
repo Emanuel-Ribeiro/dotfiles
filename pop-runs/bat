@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+#if having issues, they renamed the executable to batcat
+sudo apt install bat
+

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Install Bluetooth utilities
+sudo apt update
+sudo apt install -y bluez bluez-tools blueman
+
+# Enable and start the Bluetooth service
+sudo systemctl enable bluetooth.service
+sudo systemctl start bluetooth.service
+

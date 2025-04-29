@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+sudo apt install flatpak
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+sudo flatpak install flathub com.discordapp.Discord
+sudo flatpak install flathub com.slack.Slack
+sudo flatpak install flathub io.dbeaver.DBeaverCommunity
+sudo flatpak install flathub com.brave.Browser
+
+xdg-settings set default-web-browser com.brave.Browser.desktop
+
+sudo ln -s /var/lib/flatpak/exports/bin/com.brave.Browser /usr/bin/brave
+sudo ln -s /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity /usr/bin/dbeaver
+sudo ln -s /var/lib/flatpak/exports/bin/com.slack.Slack /usr/bin/slack
+sudo ln -s /var/lib/flatpak/exports/bin/com.discordapp.Discord /usr/bin/discord
+

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Install Podman
+sudo apt update
+sudo apt install -y podman
+
+# Enable and start the Podman service (if needed)
+sudo systemctl enable --now podman.socket
+
+# Install Podman Compose
+sudo apt install -y podman-compose
+
