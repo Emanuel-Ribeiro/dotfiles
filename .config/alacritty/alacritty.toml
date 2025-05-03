@@ -1,0 +1,51 @@
+[font]
+size = 12.0
+
+[font.normal]
+family = "MesloLGS Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "MesloLGS Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "MesloLGS Nerd Font"
+style = "Italic"
+
+[font.bold_italic]
+family = "MesloLGS Nerd Font"
+style = "Bold Italic"
+
+[colors.primary]
+background = "#333333"
+foreground = "#ffffff"
+
+[colors.cursor]
+text = "#000000"
+cursor = "#f0e68c"
+
+[colors.selection]
+text = "#000000"
+background = "#b5d5ff"
+
+[colors.normal]
+black   = "#000000"
+red     = "#ff5555"
+green   = "#55ff55"
+yellow  = "#ffff56"
+blue    = "#5555ff"
+magenta = "#ff55ff"
+cyan    = "#55ffff"
+white   = "#bbbbbb"
+
+[colors.bright]
+black   = "#555555"
+red     = "#ff8888"
+green   = "#88ff88"
+yellow  = "#ffff88"
+blue    = "#8888ff"
+magenta = "#ff88ff"
+cyan    = "#88ffff"
+white   = "#ffffff"
+
