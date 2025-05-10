@@ -14,7 +14,8 @@ set $down j
 set $up k
 set $right l
 # Your preferred terminal emulator
-bindsym $mod+Return exec /usr/bin/ghostty -e zsh --login
+bindsym $mod+Return exec ~/.cargo/bin/alacritty -e zsh -c 'tmux has-session -t whatever 2>/dev/null || tmux new-session -d -s whatever; tmux has-session -t work 2>/dev/null || tmux new-session -d -s work; exec tmux attach-session -t whatever'
+
 # Recommends: foot
 set $term ghostty
 # Your preferred application launcher
@@ -178,4 +179,5 @@ bindsym $mod+p exec grim -g "$(slurp)" - | wl-copy
 include '$(/usr/libexec/sway/layered-include "/usr/share/sway/config.d/*.conf" "/etc/sway/config.d/*.conf" "${XDG_CONFIG_HOME:-$HOME/.config}/sway/config.d/*.conf")'
 
 output DP-2 resolution 1920x1080@143.855Hz
+
 
