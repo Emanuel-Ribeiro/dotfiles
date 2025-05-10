@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+swaymsg output HDMI-A-2 mode 1920x1080 pos 1920 0 enable
+
