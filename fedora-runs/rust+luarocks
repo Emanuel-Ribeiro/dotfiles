@@ -9,6 +9,7 @@ git config --global user.name "Emanuel Ribeiro"
 # go??? i need to install this
 # lua btw
 cargo install stylua
+cargo install alacritty
 
 # luarocks
 pushd /tmp/luarocks-3.11.0

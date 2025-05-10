@@ -3,6 +3,11 @@
 sudo dnf copr enable derisis13/ani-cli
 sudo dnf install ani-cli
 
+mkdir -p ~/.local/share/fonts
+cd ~/.local/share/fonts
+wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip
+unzip Meslo.zip\nfc-cache -fv
+
 sudo dnf install zsh
 hash -r
 sudo chsh -s $(which zsh)
