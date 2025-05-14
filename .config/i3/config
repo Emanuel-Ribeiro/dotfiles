@@ -7,7 +7,7 @@ for_window [class="^.*"] floating disable
 
 floating_modifier $mod
 
-bindsym $mod+Return exec /usr/bin/ghostty -e zsh --login
+bindsym $mod+Return exec --no-startup-id /home/toor/.cargo/bin/alacritty -e zsh -c "tmux has-session -t whatever 2>/dev/null || tmux new-session -d -s whatever && tmux has-session -t work 2>/dev/null || tmux new-session -d -s work && exec tmux attach-session -t whatever"
 
 bindsym $mod+Shift+q kill
 
