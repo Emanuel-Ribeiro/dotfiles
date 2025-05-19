@@ -1,51 +1,375 @@
 #!/usr/bin/env bash
 
-#we use this to get to the script dir, so were going to change directory into bash0(in this case this script) and get the present working dir
-script_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd) 
-filter="" #first argument thats passed into the script
-plan="0"
+# pop-run: An improved script to manage Pop!_OS installation scripts
+# Author: Emanuel Ribeiro (updated version)
 
-while [[ $# > 0 ]]; do
-	if [[ $1 == "plan" ]]; then	
-		plan="1"
-	else
-		filter="$1"
-	fi
-	shift #this removes the first arg so whe can proceed whith the rest of them
-done
+set -e  # Exit immediately if a command exits with a non-zero status
 
-log(){
-	if [[ $plan = "1" ]]; then
-		echo "[DRY_RUN]: $@" #this means to print everything that was passed to me 
-	else
-		echo "$@" #print all of them
-	fi
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# Script configuration
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+LOGS_DIR="${SCRIPT_DIR}/logs"
+CONFIG_FILE="${SCRIPT_DIR}/config.ini"
+RUNS_DIR="${SCRIPT_DIR}/pop-runs"
+TEMP_DIR="/tmp/pop-run-temp"
+
+# Command line arguments
+FILTER=""
+PLAN=0
+VERBOSE=0
+FORCE=0
+PARALLEL=0
+DRY_RUN=0
+SKIP_CONFIRM=0
+
+# Script dependencies - will be checked
+DEPENDENCIES=("curl" "wget" "grep" "find")
+
+# Help message
+usage() {
+    cat << EOF
+${BOLD}Usage:${NC} ${0##*/} [OPTIONS] [FILTER]
+
+${BOLD}Options:${NC}
+  -h, --help         Show this help message
+  -p, --plan         Dry run (show what would be executed)
+  -v, --verbose      Enable verbose output
+  -f, --force        Force installation (skip checks)
+  -y, --yes          Skip confirmation prompts
+  --parallel         Run scripts in parallel where possible
+  
+${BOLD}Examples:${NC}
+  ${0##*/}           Run all scripts
+  ${0##*/} neovim    Run only the neovim script
+  ${0##*/} --plan    Show what would be executed without actually running anything
+  ${0##*/} -v i3     Run only the i3 script with verbose output
+
+${BOLD}Available scripts:${NC}
+$(find ${RUNS_DIR} -maxdepth 1 -mindepth 1 -executable -type f -printf "  %f\n" | sort)
+
+EOF
 }
 
-execute(){
-	log "execute $@"
-	if [[ $plan = "1" ]]; then
-		return #if it is a plan dont execute at all
-	fi
-
-	"$@" #else execute everything
+# Parse command line arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -p|--plan)
+                PLAN=1
+                DRY_RUN=1
+                ;;
+            -v|--verbose)
+                VERBOSE=1
+                ;;
+            -f|--force)
+                FORCE=1
+                ;;
+            -y|--yes)
+                SKIP_CONFIRM=1
+                ;;
+            --parallel)
+                PARALLEL=1
+                ;;
+            -*)
+                echo -e "${RED}Unknown option: $1${NC}" >&2
+                usage
+                exit 1
+                ;;
+            *)
+                if [ -z "$FILTER" ]; then
+                    FILTER="$1"
+                else
+                    echo -e "${RED}Too many arguments. Only one filter is allowed.${NC}" >&2
+                    usage
+                    exit 1
+                fi
+                ;;
+        esac
+        shift
+    done
 }
 
-log "$script_dir -- $filter"
+# Logging functions
+setup_logging() {
+    mkdir -p "${LOGS_DIR}"
+    LOG_FILE="${LOGS_DIR}/pop-run-$(date +%Y%m%d-%H%M%S).log"
+    
+    # Enable logging to file
+    exec &> >(tee -a "${LOG_FILE}")
+    
+    log_info "Starting pop-run at $(date)"
+    log_info "Log file: ${LOG_FILE}"
+}
 
-cd $script_dir
+log_info() {
+    echo -e "[${BLUE}INFO${NC}] $(date +%T) $*"
+}
 
-#this will find every single executable file thats executable within the runs directory
-scripts=$(find ./pop-runs -maxdepth 1 -mindepth 1 -executable -type f)
+log_success() {
+    echo -e "[${GREEN}SUCCESS${NC}] $(date +%T) $*"
+}
 
-#so in this block we are choosing which scripts we want to run, if we do not provide any argument we will run it all, but providing and argument we can run only the filtered one
-for script in $scripts; do
-	#grep -q is to run quietly and -v is to reverse in the sense that is gonna try to not find the match
-	if echo "$script" | grep -qv "$filter"; then #so basically here we are asking, "does this script not contain this filter?"
-		log "Skipping $script script - filtered out"
-		continue	
-	fi	
+log_warning() {
+    echo -e "[${YELLOW}WARNING${NC}] $(date +%T) $*" >&2
+}
 
-	execute ./$script #if we have it we execute the script(s)
-done
+log_error() {
+    echo -e "[${RED}ERROR${NC}] $(date +%T) $*" >&2
+}
+
+log_dry_run() {
+    echo -e "[${MAGENTA}DRY_RUN${NC}] $(date +%T) $*"
+}
+
+# Execute command with proper logging
+execute() {
+    if [[ $DRY_RUN -eq 1 ]]; then
+        log_dry_run "Would execute: $*"
+        return 0
+    fi
+
+    log_info "Executing: $*"
+    
+    if [[ $VERBOSE -eq 1 ]]; then
+        "$@"
+    else
+        # Capture output but show on error
+        local output
+        if ! output=$("$@" 2>&1); then
+            log_error "Command failed: $*"
+            echo -e "${RED}Output:${NC}\n$output" >&2
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Check if we're running on Pop!_OS
+check_system() {
+    if [[ $FORCE -eq 1 ]]; then
+        log_warning "Force flag set. Skipping system check."
+        return 0
+    fi
+    
+    if [ -f /etc/os-release ]; then
+        source /etc/os-release
+        if [[ "$NAME" != "Pop!_OS" ]]; then
+            log_warning "This script is designed for Pop!_OS, but you're running $NAME"
+            read -p "Continue anyway? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                log_error "Aborted by user"
+                exit 1
+            fi
+        else
+            log_info "Running on Pop!_OS $VERSION_ID"
+        fi
+    else
+        log_warning "Can't determine OS type. This script is designed for Pop!_OS."
+        if [[ $SKIP_CONFIRM -eq 0 ]]; then
+            read -p "Continue anyway? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                log_error "Aborted by user"
+                exit 1
+            fi
+        fi
+    fi
+}
+
+# Check for required dependencies
+check_dependencies() {
+    local missing=0
+    
+    for cmd in "${DEPENDENCIES[@]}"; do
+        if ! command -v "$cmd" &> /dev/null; then
+            log_error "Required command not found: $cmd"
+            missing=1
+        fi
+    done
+    
+    if [[ $missing -eq 1 ]]; then
+        log_error "Please install the missing dependencies and try again."
+        exit 1
+    fi
+}
+
+# Create a temporary directory for downloads
+setup_temp_dir() {
+    mkdir -p "${TEMP_DIR}"
+    log_info "Created temporary directory: ${TEMP_DIR}"
+    
+    # Register cleanup handler
+    trap cleanup EXIT
+}
+
+# Clean up temporary files on exit
+cleanup() {
+    log_info "Cleaning up..."
+    rm -rf "${TEMP_DIR}"
+}
+
+# Get the list of scripts to run
+get_scripts() {
+    local scripts=()
+    
+    # Find all executable files in the pop-runs directory
+    while IFS= read -r script; do
+        if [[ -z "$FILTER" || "$script" == *"$FILTER"* ]]; then
+            scripts+=("$script")
+        fi
+    done < <(find "${RUNS_DIR}" -maxdepth 1 -mindepth 1 -executable -type f | sort)
+    
+    # Check if any scripts match the filter
+    if [[ ${#scripts[@]} -eq 0 ]]; then
+        if [[ -z "$FILTER" ]]; then
+            log_error "No executable scripts found in ${RUNS_DIR}"
+        else
+            log_error "No scripts matching filter '$FILTER' found in ${RUNS_DIR}"
+        fi
+        exit 1
+    fi
+    
+    echo "${scripts[@]}"
+}
+
+# Show what scripts will be run and confirm
+confirm_run() {
+    local scripts=("$@")
+    
+    echo -e "\n${BOLD}The following scripts will be run:${NC}"
+    for script in "${scripts[@]}"; do
+        echo -e "  - ${CYAN}$(basename "$script")${NC}"
+    done
+    echo
+    
+    if [[ $DRY_RUN -eq 1 ]]; then
+        log_warning "Dry run mode - no changes will be made"
+    fi
+    
+    if [[ $SKIP_CONFIRM -eq 0 && $DRY_RUN -eq 0 ]]; then
+        read -p "Do you want to continue? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_error "Aborted by user"
+            exit 1
+        fi
+    fi
+}
+
+# Run a single script with proper environment
+run_script() {
+    local script="$1"
+    local script_name=$(basename "$script")
+    local start_time=$(date +%s)
+    
+    log_info "Running script: ${script_name}"
+    
+    # Export variables for scripts to use
+    export POP_RUN_DIR="${SCRIPT_DIR}"
+    export POP_RUN_TEMP_DIR="${TEMP_DIR}"
+    export POP_RUN_VERBOSE="${VERBOSE}"
+    export POP_RUN_DRY_RUN="${DRY_RUN}"
+    
+    # Run the script
+    if [[ $DRY_RUN -eq 1 ]]; then
+        log_dry_run "Would execute script: ${script}"
+    else
+        (
+            if [[ $VERBOSE -eq 1 ]]; then
+                "${script}" 2>&1
+            else
+                output=$("${script}" 2>&1) || {
+                    log_error "Script ${script_name} failed with exit code $?"
+                    echo "$output" | sed 's/^/  /'
+                    return 1
+                }
+            fi
+        )
+        
+        local status=$?
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        
+        if [[ $status -eq 0 ]]; then
+            log_success "Script ${script_name} completed successfully in ${duration}s"
+        else
+            log_error "Script ${script_name} failed with exit code ${status} after ${duration}s"
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Main function to run scripts
+run_scripts() {
+    local scripts=("$@")
+    local failures=0
+    
+    # Run the scripts
+    for script in "${scripts[@]}"; do
+        if ! run_script "$script"; then
+            failures=$((failures + 1))
+        fi
+    done
+    
+    # Show summary
+    if [[ $failures -gt 0 ]]; then
+        log_error "${failures} script(s) failed"
+        return 1
+    else
+        log_success "All scripts completed successfully"
+        return 0
+    fi
+}
+
+# Main entry point
+main() {
+    # Parse command line arguments
+    parse_args "$@"
+    
+    # Set up logging
+    setup_logging
+    
+    # Check system and dependencies
+    check_system
+    check_dependencies
+    
+    # Set up temporary directory
+    setup_temp_dir
+    
+    # Get list of scripts to run
+    scripts=($(get_scripts))
+    
+    # Show what will be run and confirm
+    confirm_run "${scripts[@]}"
+    
+    # Run the scripts
+    run_scripts "${scripts[@]}"
+    
+    # Final message
+    if [[ $DRY_RUN -eq 0 ]]; then
+        log_success "All done! Installation completed."
+    else
+        log_info "Dry run completed. No changes were made."
+    fi
+}
+
+# Run main function
+main "$@"
 
