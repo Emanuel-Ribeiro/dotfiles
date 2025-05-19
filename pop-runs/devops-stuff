@@ -10,7 +10,7 @@ sudo apt install -y unzip curl gnupg tar jq
 
 # Install `just` command runner
 if ! command -v just &> /dev/null; then
-    curl -s https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+    curl -s https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
 fi
 
 # Install SOPS
