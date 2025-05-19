@@ -1,0 +1,322 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Enable colors
+clear
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Function to display status messages
+status() {
+    local color=$GREEN
+    [[ $1 == 'WARN' ]] && color=$YELLOW
+    [[ $1 == 'ERR' ]] && color=$RED
+    echo -e "${color}[$1]${NC} $2"
+}
+
+# Initial system update
+status "INFO" "Starting system update..."
+sudo apt update && sudo apt full-upgrade -y
+
+# Main installation function
+main_install() {
+    # System utilities
+    status "INFO" "Installing core system utilities..."
+    sudo apt install -y \
+        zsh bat bluez bluez-tools blueman i3 ripgrep pavucontrol \
+        xclip light tldr python3-pip shutter build-essential dkms \
+        rofi tmux unzip curl gnupg tar jq nodejs npm podman \
+        podman-composite linux-headers-$(uname -r) lua5.1 liblua5.1-0-dev \
+        luarocks ninja-build gettext libtool libtool-bin autoconf \
+        automake cmake g++ pkg-config unzip doxygen maim nitrogen picom
+
+    # Shell configuration
+    status "INFO" "Configuring ZSH..."
+    sudo chsh -s "$(which zsh)" "$USER"
+    if [[ ! -d ~/.oh-my-zsh ]]; then
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    fi
+
+    # Powerlevel10k theme
+    if [[ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+    fi
+
+    # ZSH plugins
+    status "INFO" "Installing ZSH plugins..."
+    declare -A plugins=(
+        [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
+        [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
+        [zsh-z]="https://github.com/agkozak/zsh-z"
+        [zsh-completions]="https://github.com/zsh-users/zsh-completions"
+    )
+    for plugin in "${!plugins[@]}"; do
+        if [[ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/$plugin ]]; then
+            git clone --depth=1 "${plugins[$plugin]}" "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/$plugin"
+        fi
+    done
+
+    # DevOps tools
+    status "INFO" "Installing DevOps tools..."
+    # Just
+    curl -s https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
+    # SOPS
+    curl -LO https://github.com/getsops/sops/releases/download/v3.10.1/sops-v3.10.1.linux.amd64
+    sudo mv sops-v3.10.1.linux.amd64 /usr/local/bin/sops
+    sudo chmod +x /usr/local/bin/sops
+    # AWS CLI
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip -q awscliv2.zip
+    sudo ./aws/install
+    rm -rf aws awscliv2.zip
+    # Terraform
+    TERRAFORM_VERSION=$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r .current_version)
+    curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+    unzip "terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+    sudo mv terraform /usr/local/bin/
+    # Terragrunt
+    TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | jq -r .tag_name | sed 's/v//')
+    curl -Lo terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
+    chmod +x terragrunt
+    sudo mv terragrunt /usr/local/bin/
+
+    # Flatpak setup
+    status "INFO" "Setting up Flatpak..."
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak install -y flathub \
+        com.discordapp.Discord \
+        com.slack.Slack \
+        io.dbeaver.DBeaverCommunity \
+        com.brave.Browser
+    xdg-settings set default-web-browser com.brave.Browser.desktop
+
+    # GitHub CLI
+    status "INFO" "Installing GitHub CLI..."
+    sudo mkdir -p -m 755 /etc/apt/keyrings
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+    sudo apt update && sudo apt install -y gh
+
+    # Rust and Cargo packages
+    status "INFO" "Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+    cargo install stylua --features luajit
+    cargo install eza alacritty
+
+    # Node.js tools
+    status "INFO" "Setting up Node.js environment..."
+    npm config set prefix ~/.local/npm
+    npm i -g n
+    n lts
+    curl -fsSL https://deno.land/install.sh | sh
+    curl -fsSL https://bun.sh/install | bash
+
+    # Neovim setup
+    status "INFO" "Building Neovim..."
+    NVIM_DIR="$HOME/personal/neovim"
+    if [[ ! -d "$NVIM_DIR" ]]; then
+        git clone -b v0.11.0 https://github.com/neovim/neovim.git "$NVIM_DIR"
+        cd "$NVIM_DIR"
+        make CMAKE_BUILD_TYPE=RelWithDebInfo
+        sudo make install
+        cd -
+    fi
+
+    # ani-cli
+    status "INFO" "Installing ani-cli..."
+    git clone "https://github.com/pystardust/ani-cli.git" /tmp/ani-cli
+    sudo cp /tmp/ani-cli/ani-cli /usr/local/bin
+    rm -rf /tmp/ani-cli
+
+    # fzf
+    status "INFO" "Installing fzf..."
+    if [[ ! -d ~/personal/fzf ]]; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf"
+        "$HOME/personal/fzf/install" --all
+    fi
+
+    # Git configuration
+    status "INFO" "Setting up Git..."
+    git config --global user.email "lima.ribeiro.emanuel@gmail.com"
+    git config --global user.name "Emanuel Ribeiro"
+
+    # Final cleanup
+    status "INFO" "Cleaning up..."
+    sudo apt autoremove -y
+    sudo apt clean
+}
+
+# Execute main installation
+main_install
+
+# Final messages
+echo -e "${GREEN}✅ All installations completed successfully!${NC}"
+echo -e "\n${YELLOW}📦 Installed versions:${NC}"
+aws --version
+session-manager-plugin --version
+terraform version
+terragrunt -v
+rustc --version
+cargo --version
+nvim --version | head -n 1#!/usr/bin/env bash
+set -euo pipefail
+
+# Enable colors
+clear
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Function to display status messages
+status() {
+    local color=$GREEN
+    [[ $1 == 'WARN' ]] && color=$YELLOW
+    [[ $1 == 'ERR' ]] && color=$RED
+    echo -e "${color}[$1]${NC} $2"
+}
+
+# Initial system update
+status "INFO" "Starting system update..."
+sudo apt update && sudo apt full-upgrade -y
+
+# Main installation function
+main_install() {
+    # System utilities
+    status "INFO" "Installing core system utilities..."
+    sudo apt install -y \
+        zsh bat bluez bluez-tools blueman i3 ripgrep pavucontrol \
+        xclip light tldr python3-pip shutter build-essential dkms \
+        rofi tmux unzip curl gnupg tar jq nodejs npm podman \
+        podman-composite linux-headers-$(uname -r) lua5.1 liblua5.1-0-dev \
+        luarocks ninja-build gettext libtool libtool-bin autoconf \
+        automake cmake g++ pkg-config unzip doxygen maim nitrogen picom
+
+    # Shell configuration
+    status "INFO" "Configuring ZSH..."
+    sudo chsh -s "$(which zsh)" "$USER"
+    if [[ ! -d ~/.oh-my-zsh ]]; then
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    fi
+
+    # Powerlevel10k theme
+    if [[ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+    fi
+
+    # ZSH plugins
+    status "INFO" "Installing ZSH plugins..."
+    declare -A plugins=(
+        [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
+        [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
+        [zsh-z]="https://github.com/agkozak/zsh-z"
+        [zsh-completions]="https://github.com/zsh-users/zsh-completions"
+    )
+    for plugin in "${!plugins[@]}"; do
+        if [[ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/$plugin ]]; then
+            git clone --depth=1 "${plugins[$plugin]}" "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/$plugin"
+        fi
+    done
+
+    # DevOps tools
+    status "INFO" "Installing DevOps tools..."
+    # Just
+    curl -s https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
+    # SOPS
+    curl -LO https://github.com/getsops/sops/releases/download/v3.10.1/sops-v3.10.1.linux.amd64
+    sudo mv sops-v3.10.1.linux.amd64 /usr/local/bin/sops
+    sudo chmod +x /usr/local/bin/sops
+    # AWS CLI
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip -q awscliv2.zip
+    sudo ./aws/install
+    rm -rf aws awscliv2.zip
+    # Terraform
+    TERRAFORM_VERSION=$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r .current_version)
+    curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+    unzip "terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+    sudo mv terraform /usr/local/bin/
+    # Terragrunt
+    TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | jq -r .tag_name | sed 's/v//')
+    curl -Lo terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
+    chmod +x terragrunt
+    sudo mv terragrunt /usr/local/bin/
+
+    # Flatpak setup
+    status "INFO" "Setting up Flatpak..."
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak install -y flathub \
+        com.discordapp.Discord \
+        com.slack.Slack \
+        io.dbeaver.DBeaverCommunity \
+        com.brave.Browser
+    xdg-settings set default-web-browser com.brave.Browser.desktop
+
+    # GitHub CLI
+    status "INFO" "Installing GitHub CLI..."
+    sudo mkdir -p -m 755 /etc/apt/keyrings
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+    sudo apt update && sudo apt install -y gh
+
+    # Rust and Cargo packages
+    status "INFO" "Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+    cargo install stylua --features luajit
+    cargo install eza alacritty
+
+    # Node.js tools
+    status "INFO" "Setting up Node.js environment..."
+    npm config set prefix ~/.local/npm
+    npm i -g n
+    n lts
+    curl -fsSL https://deno.land/install.sh | sh
+    curl -fsSL https://bun.sh/install | bash
+
+    # Neovim setup
+    status "INFO" "Building Neovim..."
+    NVIM_DIR="$HOME/personal/neovim"
+    if [[ ! -d "$NVIM_DIR" ]]; then
+        git clone -b v0.11.0 https://github.com/neovim/neovim.git "$NVIM_DIR"
+        cd "$NVIM_DIR"
+        make CMAKE_BUILD_TYPE=RelWithDebInfo
+        sudo make install
+        cd -
+    fi
+
+    # ani-cli
+    status "INFO" "Installing ani-cli..."
+    git clone "https://github.com/pystardust/ani-cli.git" /tmp/ani-cli
+    sudo cp /tmp/ani-cli/ani-cli /usr/local/bin
+    rm -rf /tmp/ani-cli
+
+    # fzf
+    status "INFO" "Installing fzf..."
+    if [[ ! -d ~/personal/fzf ]]; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf"
+        "$HOME/personal/fzf/install" --all
+    fi
+
+    # Final cleanup
+    status "INFO" "Cleaning up..."
+    sudo apt autoremove -y
+    sudo apt clean
+}
+
+# Execute main installation
+main_install
+
+# Final messages
+echo -e "${GREEN}✅ All installations completed successfully!${NC}"
+echo -e "\n${YELLOW}📦 Installed versions:${NC}"
+aws --version
+session-manager-plugin --version
+terraform version
+terragrunt -v
+rustc --version
+cargo --version
+nvim --version | head -n 1
