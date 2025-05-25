@@ -1,18 +1,11 @@
 #!/usr/bin/env bash
 
 sudo dnf copr enable derisis13/ani-cli
-sudo dnf install ani-cli
+sudo dnf install ani-cli fontconfig-devel
 
 mkdir -p ~/.local/share/fonts
 cd ~/.local/share/fonts
 wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip
 unzip Meslo.zip
 fc-cache -fv
-
-sudo dnf install zsh
-hash -r
-sudo chsh -s $(which zsh)
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-
 

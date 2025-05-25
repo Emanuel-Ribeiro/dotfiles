@@ -60,4 +60,4 @@ copy_dir .config $XDG_CONFIG_HOME
 copy_dir .local  $HOME/.local
 
 copy_file .zshrc $HOME
-copy_file .zsh_profile $HOME
+

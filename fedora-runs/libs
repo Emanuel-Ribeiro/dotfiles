@@ -8,8 +8,6 @@ sudo dnf install -y \
 
 sudo dnf -y update
 
-# sudo dnf -y install akmod-nvidia xorg-x11-drv-nvidia-cuda
-
 sudo dnf -y install kernel-devel
 
 sudo dnf -y install \
@@ -24,6 +22,4 @@ sudo dnf -y install \
 
 git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf"
 "$HOME/personal/fzf/install" --all
-
-echo "✅ Instalação concluída. Reinicie o sistema para aplicar o driver NVIDIA."
 
