@@ -183,7 +183,13 @@ alias vz='nvim ~/.zshrc'
 alias vn='cd ~/.config/nvim && nvim .'
 alias vi='cd ~/flat/infrastructure-as-code && nvim .'
 alias sb='cd ~/second-brain && nvim .'
-
+alias k='kubectl'
+alias e='echo'
 # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 export PATH="$HOME/.local/scripts:$PATH"
+
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/home/toor/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 
