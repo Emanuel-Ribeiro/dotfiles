@@ -2,6 +2,7 @@
 
 sudo dnf copr enable derisis13/ani-cli
 sudo dnf install ani-cli fontconfig-devel
+sudo dnf install xfce4-clipman-plugin
 
 mkdir -p ~/.local/share/fonts
 cd ~/.local/share/fonts

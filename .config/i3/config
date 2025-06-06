@@ -126,6 +126,7 @@ exec --no-startup-id volumeicon
 exec --no-startup-id nitrogen --restore
 exec --no-startup-id picom
 exec --no-startup-id blueman-applet
+exec --no-startup-id xfce4-clipman
 
 # FKeys
 # Pulse Audio controls
